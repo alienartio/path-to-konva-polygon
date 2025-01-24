@@ -1,2 +1,5 @@
-# path-to-konva-polygon
-Convert SVG to Konva Polygon
+# Path to Konva Polygon
+
+Converts SVG to Konva Polygon
+
+It's modified version of the following project: https://github.com/betravis/shape-tools/tree/master/path-to-polygon
