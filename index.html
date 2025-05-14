@@ -15,7 +15,7 @@
         divideXBy: 1,
         divideYBy: 1,
         units: '',
-        precision: 3
+        precision: 2
     };
     function pointCommandsToSVGPoints(pointCommands) {
         return pointCommands.map(function(value, index, array) {
@@ -100,24 +100,42 @@
         document.getElementById('svg-result').innerHTML = document.getElementById('svg-original').innerHTML;
         var paths = document.querySelectorAll('#svg-result path');
         var cssPolygons = ['<div>'];
-        const results = [];
+        const formattedResults = {};
+        
         for (var i = 0; i < paths.length; i++) {
             var path = paths[i];
             var pointsArray = pathToPoints(path.pathSegList);
-            // var polygonSVGPoints = pointCommandsToSVGPoints(points);
-    
-            // var polygon = document.createElementNS('http://www.w3.org/2000/svg','polygon');
-            // polygon.setAttributeNS(null, 'fill', '#cecece');
-            // polygon.setAttributeNS(null, 'points', polygonSVGPoints);
-            // path.parentNode.replaceChild(polygon, path);
-    
-            const result = pointsArray.map(points => pointCommandsToCSSPoints(points, settings));
-            results.push(...result);
+            const polygons = pointsArray.map(points => pointCommandsToCSSPoints(points, settings));
+            
+            let parentId = path.parentElement && path.parentElement.getAttribute('id');
+            // Get ID from path or parent g element
+            let id = path.getAttribute('id') || parentId || Math.random().toString(36).substring(2, 15);
+
+            let codes = [id];
+            if (id.includes('-')) {
+                codes.push(id.split('-')[1]);
+            }
+
+            if (formattedResults[id]) {
+                formattedResults[id].polygons.push(...polygons);
+            }
+            else {
+                formattedResults[id] = {
+                    name: id,
+                    id: id,
+                    codes: codes.length > 0 ? codes : [id], // Use id as fallback
+                    polygons: polygons,
+                    size: 10, // Default size
+                    x: 0,     // Default x
+                    y: 0      // Default y
+                };
+            }
         }
-        cssPolygons.push(JSON.stringify(results));
+        
+        cssPolygons.push(JSON.stringify(Object.values(formattedResults), null, 2));
         cssPolygons.push('</div>');
         document.getElementById('output').innerHTML = cssPolygons.join('');
-        return results;
+        return Object.values(formattedResults);
     }
     window.onload = function() {
         var gui = new dat.GUI({ autoPlace: false });
