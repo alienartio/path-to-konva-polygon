@@ -123,26 +123,38 @@
                 formattedResults[id] = {
                     name: id,
                     id: id,
-                    codes: codes.length > 0 ? codes : [id], // Use id as fallback
+                    codes,
+                    size: 10,
+                    x: 0,
+                    y: 0,
                     polygons: polygons,
-                    size: 10, // Default size
-                    x: 0,     // Default x (will be calculated later)
-                    y: 0      // Default y (will be calculated later)
                 };
             }
         }
         
-        // Calculate average x and y for each result
+        // Get SVG width for size calculation
+        const svgWidth = parseFloat(svg.getAttribute('width')) || 100;
+        
+        // Calculate average x and y, and size for each result
         Object.values(formattedResults).forEach(result => {
             let totalX = 0;
             let totalY = 0;
             let pointCount = 0;
+            let minX = Infinity;
+            let maxX = -Infinity;
             
             // Iterate through all polygons and their points
             result.polygons.forEach(polygon => {
                 for (let i = 0; i < polygon.length; i += 2) {
-                    totalX += polygon[i];     // X coordinates are at even indices
-                    totalY += polygon[i + 1]; // Y coordinates are at odd indices
+                    const x = polygon[i];
+                    const y = polygon[i + 1];
+                    
+                    // Track min and max X for width calculation
+                    if (x < minX) minX = x;
+                    if (x > maxX) maxX = x;
+                    
+                    totalX += x;     // X coordinates
+                    totalY += y;     // Y coordinates
                     pointCount++;
                 }
             });
@@ -151,6 +163,21 @@
             if (pointCount > 0) {
                 result.x = parseFloat((totalX / pointCount).toFixed(settings.precision));
                 result.y = parseFloat((totalY / pointCount).toFixed(settings.precision));
+                
+                // Calculate path width
+                const pathWidth = maxX - minX;
+                const widthRatio = pathWidth / svgWidth;
+                
+                // Set size based on width ratio
+                if (widthRatio >= 0.1) {
+                    // If path width is 10% or more of SVG width, use fixed size 10
+                    result.size = 10;
+                } else {
+                    // Otherwise scale between 2 and 9 based on percentage of total width
+                    // Map widthRatio from [0, 0.1] to [2, 9]
+                    result.size = Math.max(2, Math.min(9, 2 + (widthRatio * 70)));
+                    result.size = parseFloat(result.size.toFixed(1));
+                }
             }
         });
         
