@@ -126,11 +126,33 @@
                     codes: codes.length > 0 ? codes : [id], // Use id as fallback
                     polygons: polygons,
                     size: 10, // Default size
-                    x: 0,     // Default x
-                    y: 0      // Default y
+                    x: 0,     // Default x (will be calculated later)
+                    y: 0      // Default y (will be calculated later)
                 };
             }
         }
+        
+        // Calculate average x and y for each result
+        Object.values(formattedResults).forEach(result => {
+            let totalX = 0;
+            let totalY = 0;
+            let pointCount = 0;
+            
+            // Iterate through all polygons and their points
+            result.polygons.forEach(polygon => {
+                for (let i = 0; i < polygon.length; i += 2) {
+                    totalX += polygon[i];     // X coordinates are at even indices
+                    totalY += polygon[i + 1]; // Y coordinates are at odd indices
+                    pointCount++;
+                }
+            });
+            
+            // Calculate averages if there are points
+            if (pointCount > 0) {
+                result.x = parseFloat((totalX / pointCount).toFixed(settings.precision));
+                result.y = parseFloat((totalY / pointCount).toFixed(settings.precision));
+            }
+        });
         
         cssPolygons.push(JSON.stringify(Object.values(formattedResults), null, 2));
         cssPolygons.push('</div>');
