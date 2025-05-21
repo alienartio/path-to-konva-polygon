@@ -137,11 +137,11 @@
         
         // Calculate average x and y, and size for each result
         Object.values(formattedResults).forEach(result => {
-            let totalX = 0;
-            let totalY = 0;
             let pointCount = 0;
             let minX = Infinity;
             let maxX = -Infinity;
+            let minY = Infinity;
+            let maxY = -Infinity;
             
             // Iterate through all polygons and their points
             result.polygons.forEach(polygon => {
@@ -149,20 +149,22 @@
                     const x = polygon[i];
                     const y = polygon[i + 1];
                     
-                    // Track min and max X for width calculation
+                    // Track min and max for X and Y
                     if (x < minX) minX = x;
                     if (x > maxX) maxX = x;
+                    if (y < minY) minY = y;
+                    if (y > maxY) maxY = y;
                     
-                    totalX += x;     // X coordinates
-                    totalY += y;     // Y coordinates
+
                     pointCount++;
                 }
             });
             
             // Calculate averages if there are points
             if (pointCount > 0) {
-                result.x = parseFloat((totalX / pointCount).toFixed(settings.precision));
-                result.y = parseFloat((totalY / pointCount).toFixed(settings.precision));
+                // Use center of bounding box instead of average
+                result.x = parseFloat(((minX + maxX) / 2).toFixed(settings.precision));
+                result.y = parseFloat(((minY + maxY) / 2).toFixed(settings.precision));
                 
                 // Calculate path width
                 const pathWidth = maxX - minX;
