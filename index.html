@@ -90,6 +90,29 @@
         }
         return result;
     }
+    
+    // Custom JSON formatter: properties on new lines, polygons on single line
+    function formatResultsToJSON(results) {
+        if (!results || results.length === 0) return '[]';
+        
+        const lines = ['['];
+        
+        results.forEach((result, index) => {
+            lines.push('  {');
+            
+            // Format each property
+            Object.entries(result).forEach(([key, value], propIndex) => {
+                const singleLine = JSON.stringify(value);
+                lines.push(`    "${key}": ${singleLine}${propIndex < Object.keys(result).length - 1 ? ',' : ''}`);
+            });
+            
+            lines.push(`  }${index < results.length - 1 ? ',' : ''}`);
+        });
+        
+        lines.push(']');
+        return lines.join('\n');
+    }
+    
     function crunch() {
         var svg = document.querySelector('#svg-original svg');
         var viewPort = svg.getAttribute('viewBox');
@@ -183,9 +206,12 @@
             }
         });
         
-        cssPolygons.push(JSON.stringify(Object.values(formattedResults), null, 2));
+        // Use custom formatter instead of JSON.stringify
+        cssPolygons.push(formatResultsToJSON(Object.values(formattedResults)));
         cssPolygons.push('</div>');
         document.getElementById('output').innerHTML = cssPolygons.join('');
+        
+        // Return the same data structure as before
         return Object.values(formattedResults);
     }
     window.onload = function() {
@@ -275,4 +301,4 @@
     </div>
 </figure>
 <output id="viewbox"></output>
-<output id="output"></output>
+<pre id="output"></pre>
